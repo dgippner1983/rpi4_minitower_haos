@@ -1,0 +1,28 @@
+name: Tower Control
+version: 0.0.1
+slug: tower_control
+description: OLED- und LED-Steuerung für den Tower Waveshare PI4B Mini Tower Acce
+startup: services
+boot: auto
+init: false
+arch:
+  - aarch64
+  - armv7
+  - armhf
+host_network: true
+privileged:
+  - SYS_RAWIO
+devices:
+  - /dev/mem
+options:
+  led_count: 8
+  led_gpio: 21
+  led_dma: 10
+  brightness_limit: 255
+  strip_type: GRB
+schema:
+  led_count: "int(1,1024)"
+  led_gpio: "int(0,40)"
+  led_dma: "int(0,14)"
+  brightness_limit: "int(0,255)"
+  strip_type: "list(GRB|RGB|BRG|RBG|BGR|GBR)"

@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Tower Hardware",
+        "description": "Verbinde Tower LED und OLED per SSH mit dem Host",
+        "data": {
+          "ssh_host": "SSH Host",
+          "ssh_port": "SSH Port",
+          "ssh_user": "SSH Benutzer",
+          "ssh_key_path": "Pfad zum privaten SSH-Schl\u00fcssel",
+          "ssh_known_hosts": "Pfad zu known_hosts",
+          "led_binary": "Pfad zu tower_ledctl",
+          "oled_binary": "Pfad zu tower_oledctl"
+        }
+      }
+    }
+  }
+}
