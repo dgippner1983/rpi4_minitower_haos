@@ -89,7 +89,7 @@ def render_glyphs(font_path: str, size: int) -> dict:
             width=gw,
             height=gh,
             xoff=left,        # horizontal bearing (can be negative)
-            yoff=ascend - top,        # rows from bitmap top to baseline (positive = above)
+            yoff=ascent - top,        # rows from bitmap top to baseline (positive = above)
             data_offset=data_offset,
         ))
 
