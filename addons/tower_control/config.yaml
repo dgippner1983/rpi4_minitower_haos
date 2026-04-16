@@ -14,15 +14,26 @@ privileged:
   - SYS_RAWIO
 devices:
   - /dev/mem
+  - /dev/gpiomem
 options:
   led_count: 8
   led_gpio: 21
   led_dma: 10
   brightness_limit: 255
   strip_type: GRB
+  fan_gpio: 14
+  fan_off_temp: 40
+  fan_min_temp: 45
+  fan_max_temp: 75
+  fan_min_duty: 25
 schema:
   led_count: "int(1,1024)"
   led_gpio: "int(0,40)"
   led_dma: "int(0,14)"
   brightness_limit: "int(0,255)"
   strip_type: "list(GRB|RGB|BRG|RBG|BGR|GBR)"
+  fan_gpio: "int(0,40)"
+  fan_off_temp: "int(0,100)"
+  fan_min_temp: "int(0,100)"
+  fan_max_temp: "int(0,100)"
+  fan_min_duty: "int(0,99)"

@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .const import (
+    CONF_FAN_BINARY,
     CONF_LED_BINARY,
     CONF_OLED_BINARY,
     CONF_SSH_HOST,
@@ -25,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 class TowerState:
     led_available: bool = False
     oled_available: bool = False
+    fan_available: bool = False
     led_is_on: bool = False
     led_r: int = 255
     led_g: int = 228
@@ -32,6 +34,9 @@ class TowerState:
     led_brightness: int = 200
     led_effect: str | None = None
     oled_text: str = ""
+    cpu_temp: float | None = None
+    fan_mode: str = "auto"
+    fan_duty: int = 0
 
 
 class TowerApi:
@@ -61,6 +66,9 @@ class TowerApi:
         except asyncio.TimeoutError:
             proc.kill()
             raise RuntimeError("SSH command timed out")
+        except asyncio.CancelledError:
+            proc.kill()
+            raise
         return proc.returncode, out.decode().strip(), err.decode().strip()
 
     async def _check_bin(self, path: str) -> bool:
@@ -76,6 +84,7 @@ class TowerApi:
     async def probe(self) -> dict[str, Any]:
         self.state.led_available = await self._check_bin(self.data[CONF_LED_BINARY])
         self.state.oled_available = await self._check_bin(self.data[CONF_OLED_BINARY])
+        self.state.fan_available = await self._check_bin(self.data[CONF_FAN_BINARY])
 
         if self.state.led_available:
             state_file = os.path.join(
@@ -94,6 +103,26 @@ class TowerApi:
                 except Exception:
                     _LOGGER.warning("LED state file could not be parsed (rc=%d, out=%r)", rc, out)
 
+        rc, out, _ = await self._run("cat /sys/class/thermal/thermal_zone0/temp")
+        if rc == 0 and out:
+            try:
+                self.state.cpu_temp = int(out) / 1000.0
+            except ValueError:
+                pass
+
+        if self.state.fan_available:
+            fan_state_file = os.path.join(
+                os.path.dirname(self.data[CONF_FAN_BINARY]), "tower_fan_state.json"
+            )
+            rc, out, _ = await self._run(f"cat {shlex.quote(fan_state_file)}")
+            if rc == 0 and out:
+                try:
+                    fs = json.loads(out)
+                    self.state.fan_mode = fs.get("mode", "auto")
+                    self.state.fan_duty = int(fs.get("duty", 0))
+                except Exception:
+                    _LOGGER.warning("Fan state file could not be parsed: %r", out)
+
         return {
             "led": {
                 "available": self.state.led_available,
@@ -107,6 +136,14 @@ class TowerApi:
             "oled": {
                 "available": self.state.oled_available,
                 "last_text": self.state.oled_text,
+            },
+            "cpu": {
+                "temp": self.state.cpu_temp,
+            },
+            "fan": {
+                "available": self.state.fan_available,
+                "mode": self.state.fan_mode,
+                "duty": self.state.fan_duty,
             },
         }
 
@@ -127,6 +164,15 @@ class TowerApi:
         if not effect:
             raise ValueError(f"Unknown effect: {name!r}")
         await self._must(f"{shlex.quote(self.data[CONF_LED_BINARY])} effect {effect}")
+
+    async def fan_set(self, percentage: int):
+        await self._must(f"{shlex.quote(self.data[CONF_FAN_BINARY])} {percentage}")
+
+    async def fan_auto(self):
+        await self._must(f"{shlex.quote(self.data[CONF_FAN_BINARY])} auto")
+
+    async def fan_off(self):
+        await self._must(f"{shlex.quote(self.data[CONF_FAN_BINARY])} off")
 
     async def oled_text(self, text: str):
         oled = shlex.quote(self.data[CONF_OLED_BINARY])

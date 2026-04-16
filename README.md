@@ -1,4 +1,4 @@
-# Tower Control for Home Assistant 0.0.1
+# Tower Control for Home Assistant 0.0.3
 
 ## 🇬🇧 English
 
@@ -40,6 +40,35 @@ Default integration binary paths:
 
 - LED: `/mnt/data/supervisor/share/tower_control/tower_ledctl`
 - OLED: `/mnt/data/supervisor/share/tower_control/tower_oledctl`
+
+### SSH key setup
+
+The integration connects to the HA host via SSH to execute the control binaries. Key-based authentication is required.
+
+> **No SSH host access yet?** SSH access to the underlying HAOS host (port 22222) is not enabled by default. You can set it up using the community add-on [HassOS SSH Port 22222 Configurator](https://community.home-assistant.io/t/add-on-hassos-ssh-port-22222-configurator/264109).
+
+**1. Generate a key pair** (run in the HA terminal or SSH add-on):
+
+```bash
+mkdir -p /config/.ssh
+ssh-keygen -t ed25519 -f /config/.ssh/id_ed25519 -N ""
+```
+
+**2. Authorize the key on the host:**
+
+```bash
+ssh-copy-id -i /config/.ssh/id_ed25519.pub -p 22222 root@127.0.0.1
+```
+
+Or manually append the contents of `/config/.ssh/id_ed25519.pub` to `/root/.ssh/authorized_keys` on the host.
+
+**3. Test the connection:**
+
+```bash
+ssh -i /config/.ssh/id_ed25519 -p 22222 root@127.0.0.1 "echo ok"
+```
+
+The integration uses the private key at `/config/.ssh/id_ed25519` by default. This path can be changed during integration setup.
 
 ## Documentation
 
@@ -87,3 +116,32 @@ Standardpfade in der Integration:
 
 - LED: `/mnt/data/supervisor/share/tower_control/tower_ledctl`
 - OLED: `/mnt/data/supervisor/share/tower_control/tower_oledctl`
+
+### SSH-Schlüssel einrichten
+
+Die Integration verbindet sich per SSH mit dem HA-Host, um die Steuerungs-Binaries auszuführen. Es wird eine schlüsselbasierte Authentifizierung benötigt.
+
+> **Noch kein SSH-Host-Zugriff?** Der SSH-Zugriff auf den HAOS-Host (Port 22222) ist standardmäßig nicht aktiviert. Er kann mit dem Community-Add-on [HassOS SSH Port 22222 Configurator](https://community.home-assistant.io/t/add-on-hassos-ssh-port-22222-configurator/264109) eingerichtet werden.
+
+**1. Schlüsselpaar generieren** (im HA-Terminal oder SSH-Add-on ausführen):
+
+```bash
+mkdir -p /config/.ssh
+ssh-keygen -t ed25519 -f /config/.ssh/id_ed25519 -N ""
+```
+
+**2. Öffentlichen Schlüssel auf dem Host autorisieren:**
+
+```bash
+ssh-copy-id -i /config/.ssh/id_ed25519.pub -p 22222 root@127.0.0.1
+```
+
+Alternativ den Inhalt von `/config/.ssh/id_ed25519.pub` manuell an `/root/.ssh/authorized_keys` auf dem Host anhängen.
+
+**3. Verbindung testen:**
+
+```bash
+ssh -i /config/.ssh/id_ed25519 -p 22222 root@127.0.0.1 "echo ok"
+```
+
+Die Integration verwendet standardmäßig den privaten Schlüssel unter `/config/.ssh/id_ed25519`. Der Pfad kann bei der Einrichtung der Integration angepasst werden.

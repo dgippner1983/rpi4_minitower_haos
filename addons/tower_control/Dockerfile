@@ -45,6 +45,10 @@ RUN cc -O2 -static -o /usr/local/bin/tower_ledctl \
     /usr/local/lib/libws2811.a \
     -lm -pthread
 
+# Fan controller
+COPY tower_fanctl.c /tmp/tower_fanctl.c
+RUN cc -O2 -static -o /usr/local/bin/tower_fanctl /tmp/tower_fanctl.c
+
 # Runtime
 COPY run.sh /run.sh
 RUN chmod +x /run.sh

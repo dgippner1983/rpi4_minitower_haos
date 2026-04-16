@@ -1,0 +1,96 @@
+alias: Tower OLED - Rotation
+mode: restart
+max_exceeded: silent
+triggers:
+  - trigger: time_pattern
+    seconds: /20
+  - trigger: homeassistant
+    event: start
+conditions:
+  - condition: state
+    entity_id: binary_sensor.tower_oled_available
+    state: "on"
+actions:
+  - variables:
+      pages:
+        - status
+        - strom_aktuell
+        - strom_tag
+        - pv_summe
+        - pv_tag
+        - pi_temp
+        - wetter
+      current: "{{ states('input_select.tower_oled_page') }}"
+      idx: "{{ pages.index(current) if current in pages else 0 }}"
+      page: "{{ pages[(idx + 1) % (pages | count)] }}"
+  - action: input_select.select_option
+    target:
+      entity_id: input_select.tower_oled_page
+    data:
+      option: "{{ page }}"
+  - choose:
+      - conditions: "{{ page == 'status' }}"
+        sequence:
+          - action: text.set_value
+            target:
+              entity_id: text.tower_oled_text
+            data:
+              value: |
+                HA OK
+                {{ now().strftime('%H:%M') }}
+                {{ now().strftime('%d.%m') }}
+      - conditions: "{{ page == 'strom_aktuell' }}"
+        sequence:
+          - action: text.set_value
+            target:
+              entity_id: text.tower_oled_text
+            data:
+              value: |
+                STROM
+                {{ states('sensor.pikachu_leistung') | float(0) | round(0) }}W
+      - conditions: "{{ page == 'strom_tag' }}"
+        sequence:
+          - action: text.set_value
+            target:
+              entity_id: text.tower_oled_text
+            data:
+              value: |
+                STROM TAG
+                {{ states('sensor.pikachu_stromverbrauch_heute') | float(0) | round(2) }}kWh
+      - conditions: "{{ page == 'pv_summe' }}"
+        sequence:
+          - action: text.set_value
+            target:
+              entity_id: text.tower_oled_text
+            data:
+              value: |
+                PV NOW
+                {{ states('sensor.solarstrom_w') | float(0) | round(0) }}W
+      - conditions: "{{ page == 'pv_tag' }}"
+        sequence:
+          - action: text.set_value
+            target:
+              entity_id: text.tower_oled_text
+            data:
+              value: |
+                PV HEUTE
+                {{ states('sensor.solarstrom_heute') | float(0) | round(2) }}kWh
+      - conditions: "{{ page == 'pi_temp' }}"
+        sequence:
+          - action: text.set_value
+            target:
+              entity_id: text.tower_oled_text
+            data:
+              value: |
+                PI TEMP
+                {{ states('sensor.tower_cpu_temperature') | float(0) | round(1) }}°C
+      - conditions: "{{ page == 'wetter' }}"
+        sequence:
+          - action: text.set_value
+            target:
+              entity_id: text.tower_oled_text
+            data:
+              value: |
+                Wetter
+                {{ state_attr('weather.kaiserslautern', 'temperature') | float(0) | round(0) }}°C
+                {{ states('weather.kaiserslautern') }}

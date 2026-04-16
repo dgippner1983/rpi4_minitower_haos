@@ -44,3 +44,15 @@ class TowerCoordinator(DataUpdateCoordinator):
     async def async_oled_text(self, text: str):
         await self.api.oled_text(text)
         await self.async_request_refresh()
+
+    async def async_fan_set(self, percentage: int):
+        await self.api.fan_set(percentage)
+        await self.async_request_refresh()
+
+    async def async_fan_auto(self):
+        await self.api.fan_auto()
+        await self.async_request_refresh()
+
+    async def async_fan_off(self):
+        await self.api.fan_off()
+        await self.async_request_refresh()
