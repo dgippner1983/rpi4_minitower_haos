@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
+import os
 import shlex
 from dataclasses import dataclass
 from typing import Any
@@ -15,6 +17,8 @@ from .const import (
     CONF_SSH_PORT,
     CONF_SSH_USER,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -52,7 +56,11 @@ class TowerApi:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        out, err = await proc.communicate()
+        try:
+            out, err = await asyncio.wait_for(proc.communicate(), timeout=15)
+        except asyncio.TimeoutError:
+            proc.kill()
+            raise RuntimeError("SSH command timed out")
         return proc.returncode, out.decode().strip(), err.decode().strip()
 
     async def _check_bin(self, path: str) -> bool:
@@ -70,7 +78,10 @@ class TowerApi:
         self.state.oled_available = await self._check_bin(self.data[CONF_OLED_BINARY])
 
         if self.state.led_available:
-            rc, out, _ = await self._run("cat /mnt/data/supervisor/share/tower_control/tower_led_state.json")
+            state_file = os.path.join(
+                os.path.dirname(self.data[CONF_LED_BINARY]), "tower_led_state.json"
+            )
+            rc, out, _ = await self._run(f"cat {shlex.quote(state_file)}")
             if rc == 0 and out:
                 try:
                     st = json.loads(out)
@@ -81,7 +92,7 @@ class TowerApi:
                     self.state.led_brightness = int(st.get("brightness", 200))
                     self.state.led_effect = st.get("effect") or None
                 except Exception:
-                    pass
+                    _LOGGER.warning("LED state file could not be parsed (rc=%d, out=%r)", rc, out)
 
         return {
             "led": {
@@ -100,10 +111,10 @@ class TowerApi:
         }
 
     async def led_off(self):
-        await self._must(f"{self.data[CONF_LED_BINARY]} off")
+        await self._must(f"{shlex.quote(self.data[CONF_LED_BINARY])} off")
 
     async def led_color(self, r: int, g: int, b: int, brightness: int):
-        await self._must(f"{self.data[CONF_LED_BINARY]} color {r} {g} {b} {brightness}")
+        await self._must(f"{shlex.quote(self.data[CONF_LED_BINARY])} color {r} {g} {b} {brightness}")
 
     async def led_effect(self, name: str):
         mapping = {
@@ -112,23 +123,27 @@ class TowerApi:
             "Rainbow": "rainbow",
             "Pulse": "pulse",
         }
-        await self._must(f"{self.data[CONF_LED_BINARY]} effect {mapping[name]}")
+        effect = mapping.get(name)
+        if not effect:
+            raise ValueError(f"Unknown effect: {name!r}")
+        await self._must(f"{shlex.quote(self.data[CONF_LED_BINARY])} effect {effect}")
 
     async def oled_text(self, text: str):
+        oled = shlex.quote(self.data[CONF_OLED_BINARY])
         lines = [line.rstrip() for line in text.splitlines()]
         lines = [l for l in lines if l != ""]
         if not lines:
             lines = [""]
         if len(lines) == 1:
-            await self._must(f"{self.data[CONF_OLED_BINARY]} text {shlex.quote(lines[0][:20])}")
+            await self._must(f"{oled} text {shlex.quote(lines[0][:20])}")
         elif len(lines) == 2:
             await self._must(
-                f"{self.data[CONF_OLED_BINARY]} text2 "
+                f"{oled} text2 "
                 f"{shlex.quote(lines[0][:20])} {shlex.quote(lines[1][:20])}"
             )
         else:
             await self._must(
-                f"{self.data[CONF_OLED_BINARY]} text3 "
+                f"{oled} text3 "
                 f"{shlex.quote(lines[0][:20])} "
                 f"{shlex.quote(lines[1][:20])} "
                 f"{shlex.quote(lines[2][:20])}"
