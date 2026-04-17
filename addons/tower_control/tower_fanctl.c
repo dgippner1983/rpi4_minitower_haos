@@ -229,5 +229,6 @@ int main(int argc, char *argv[]) {
 
     gpio_write(fan_gpio, 0);
     save_fan_state("auto", 0, last_temp, -1);
+    munmap((void *)gpio_regs, GPIO_MAP_LEN);
     return 0;
 }

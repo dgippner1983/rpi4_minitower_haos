@@ -9,9 +9,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
 from .const import DOMAIN
+from .coordinator import TowerBaseEntity
 
 
 async def async_setup_entry(
@@ -20,7 +19,7 @@ async def async_setup_entry(
     async_add_entities([CpuTempSensor(hass.data[DOMAIN][entry.entry_id])], True)
 
 
-class CpuTempSensor(CoordinatorEntity, SensorEntity):
+class CpuTempSensor(TowerBaseEntity, SensorEntity):
     _attr_name = "Tower CPU Temperature"
     _attr_has_entity_name = True
     _attr_unique_id = "tower_hardware_cpu_temp"

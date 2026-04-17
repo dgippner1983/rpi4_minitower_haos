@@ -4,9 +4,8 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
 from .const import DOMAIN
+from .coordinator import TowerBaseEntity
 
 PRESET_AUTO = "Auto"
 PRESET_MANUAL = "Manuell"
@@ -18,7 +17,7 @@ async def async_setup_entry(
     async_add_entities([TowerFan(hass.data[DOMAIN][entry.entry_id])], True)
 
 
-class TowerFan(CoordinatorEntity, FanEntity):
+class TowerFan(TowerBaseEntity, FanEntity):
     _attr_name = "Tower Fan"
     _attr_has_entity_name = True
     _attr_unique_id = "tower_hardware_fan"

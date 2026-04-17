@@ -1,0 +1,84 @@
+# Tower Control – OLED-Rotationspaket
+#
+# Voraussetzung: packages in /config/configuration.yaml aktivieren:
+#   homeassistant:
+#     packages: !include_dir_named packages
+#
+# Dann diese Datei nach /config/packages/tower_control.yaml kopieren.
+#
+# Entity-IDs (bei Bedarf in Entwicklerwerkzeuge > Zustände prüfen und anpassen):
+#   Seiten-Texte:     text.tower_hardware_oled_page_1/2/3
+#   Wechselfrequenz:  number.tower_hardware_oled_rotation_interval
+#   OLED-Ziel:        text.tower_hardware_oled_text
+
+counter:
+  tower_oled_page:
+    name: "Tower OLED Aktuelle Seite"
+    initial: 3
+    minimum: 1
+    maximum: 3
+    step: 1
+
+timer:
+  tower_oled_rotation:
+    name: "Tower OLED Rotation"
+
+automation:
+  - id: "tower_oled_rotation_start"
+    alias: "Tower OLED – Rotation starten"
+    description: >
+      Startet den Rotationstimer beim HA-Start und bei Änderung der Wechselfrequenz.
+    trigger:
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: number.tower_hardware_oled_rotation_interval
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.tower_oled_rotation
+        data:
+          duration: >
+            {{ states('number.tower_hardware_oled_rotation_interval') | int(30) }}
+    mode: single
+
+  - id: "tower_oled_rotation_next"
+    alias: "Tower OLED – Nächste Seite"
+    description: >
+      Zeigt beim Timer-Ablauf die nächste nicht-leere Seite auf dem OLED an
+      und startet den Timer neu.
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.tower_oled_rotation
+    action:
+      - service: counter.increment
+        target:
+          entity_id: counter.tower_oled_page
+      - variables:
+          page: "{{ states('counter.tower_oled_page') | int }}"
+          text: >
+            {%- if page == 1 -%}
+              {{ states('text.tower_hardware_oled_page_1') }}
+            {%- elif page == 2 -%}
+              {{ states('text.tower_hardware_oled_page_2') }}
+            {%- else -%}
+              {{ states('text.tower_hardware_oled_page_3') }}
+            {%- endif -%}
+      - if:
+          - condition: template
+            value_template: "{{ text | trim != '' }}"
+        then:
+          - service: text.set_value
+            target:
+              entity_id: text.tower_hardware_oled_text
+            data:
+              value: "{{ text | trim }}"
+      - service: timer.start
+        target:
+          entity_id: timer.tower_oled_rotation
+        data:
+          duration: >
+            {{ states('number.tower_hardware_oled_rotation_interval') | int(30) }}
+    mode: single

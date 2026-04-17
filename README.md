@@ -1,4 +1,4 @@
-# Tower Control for Home Assistant 0.0.3
+# Tower Control for Home Assistant 0.1.0
 
 ## 🇬🇧 English
 
@@ -16,9 +16,14 @@ This repository provides a complete package for using the Raspberry Pi 4 [Wavesh
 
 ### Features
 
-- LED exposed as a `light` entity (`Tower LED`) with color, brightness, and effects
-- OLED exposed as a `text` entity (`Tower OLED Text`) with up to 3 lines
-- LED/OLED availability as `binary_sensor` entities
+- LED exposed as a `light` entity with color, brightness, and effects (Blink Slow/Fast, Rainbow, Pulse)
+- OLED direct control via a `text` entity (`Tower OLED Text`) with up to 3 lines
+- OLED page rotation: 3 configurable `text` slots (`Tower OLED Page 1–3`) rotate automatically based on a configurable `number` entity interval
+- Fan exposed as a `fan` entity with speed and auto/manual preset
+- CPU temperature as a `sensor` entity
+- LED/OLED/fan availability as `binary_sensor` entities
+- All entities grouped under a single **Tower Hardware** device
+- Ready-to-use HA packages file (`packages/tower_control.yaml`) for OLED rotation automation
 - Configurable SSH execution for host-side binaries
 
 ### Add-on installation (Home Assistant Add-on Repository)
@@ -92,9 +97,14 @@ Dieses Repository enthält ein vollständiges Paket für den Raspberry Pi 4 [Wav
 
 ### Funktionsumfang
 
-- LED als `light`-Entity (`Tower LED`) mit Farbe, Helligkeit und Effekten
-- OLED als `text`-Entity (`Tower OLED Text`) mit bis zu 3 Zeilen
-- Verfügbarkeits-Sensoren für LED/OLED als `binary_sensor`
+- LED als `light`-Entity mit Farbe, Helligkeit und Effekten (Blink Slow/Fast, Rainbow, Pulse)
+- OLED Direktsteuerung über eine `text`-Entity (`Tower OLED Text`) mit bis zu 3 Zeilen
+- OLED Seitenrotation: 3 konfigurierbare `text`-Slots (`Tower OLED Page 1–3`) wechseln automatisch basierend auf einem konfigurierbaren `number`-Entity-Intervall
+- Lüfter als `fan`-Entity mit Drehzahlregelung und Auto/Manuell-Voreinstellung
+- CPU-Temperatur als `sensor`-Entity
+- Verfügbarkeits-Sensoren für LED/OLED/Lüfter als `binary_sensor`
+- Alle Entities unter einem gemeinsamen **Tower Hardware**-Gerät gruppiert
+- Fertiges HA-Paket (`packages/tower_control.yaml`) für die OLED-Rotationsautomation
 - Konfigurierbare SSH-Verbindung zur Ausführung der Host-Binaries
 
 ### Installation Add-on (Home Assistant Add-on Repository)

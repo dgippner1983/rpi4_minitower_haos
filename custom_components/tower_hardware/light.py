@@ -10,9 +10,8 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
 from .const import DOMAIN
+from .coordinator import TowerBaseEntity
 
 EFFECTS = ["Blink Slow", "Blink Fast", "Rainbow", "Pulse"]
 
@@ -23,7 +22,7 @@ async def async_setup_entry(
     async_add_entities([TowerLedLight(hass.data[DOMAIN][entry.entry_id])], True)
 
 
-class TowerLedLight(CoordinatorEntity, LightEntity):
+class TowerLedLight(TowerBaseEntity, LightEntity):
     _attr_name = "Tower LED"
     _attr_has_entity_name = True
     _attr_supported_color_modes = {ColorMode.RGB}

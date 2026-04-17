@@ -50,6 +50,9 @@ class TowerApi:
             "-i", self.data[CONF_SSH_KEY_PATH],
             "-o", "StrictHostKeyChecking=no",
             "-o", f"UserKnownHostsFile={self.data[CONF_SSH_KNOWN_HOSTS]}",
+            "-o", "ControlMaster=auto",
+            "-o", "ControlPath=/tmp/tower_ssh_%r@%h:%p",
+            "-o", "ControlPersist=60",
             "-p", str(self.data[CONF_SSH_PORT]),
             f"{self.data[CONF_SSH_USER]}@{self.data[CONF_SSH_HOST]}",
         ]
@@ -65,9 +68,11 @@ class TowerApi:
             out, err = await asyncio.wait_for(proc.communicate(), timeout=15)
         except asyncio.TimeoutError:
             proc.kill()
+            await proc.wait()
             raise RuntimeError("SSH command timed out")
         except asyncio.CancelledError:
             proc.kill()
+            await proc.wait()
             raise
         return proc.returncode, out.decode().strip(), err.decode().strip()
 
